@@ -1,0 +1,77 @@
+name: Build Android APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - 'ChessChatApp/**'
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+          
+      - name: Grant execute permission for gradlew
+        run: |
+          cd ChessChatApp/ChessChatApp
+          chmod +x gradlew
+          
+      - name: Build Debug APK
+        run: |
+          cd ChessChatApp/ChessChatApp
+          ./gradlew assembleDebug --stacktrace
+          
+      - name: List build outputs
+        run: |
+          echo "📦 Listing APK files..."
+          find ChessChatApp/ChessChatApp/app/build/outputs/apk -name "*.apk"
+          
+      - name: Upload Debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: chess-chat-app-debug
+          path: ChessChatApp/ChessChatApp/app/build/outputs/apk/debug/*.apk
+          retention-days: 30
+          
+      - name: Build Release APK (unsigned)
+        run: |
+          cd ChessChatApp/ChessChatApp
+          ./gradlew assembleRelease --stacktrace
+        continue-on-error: true
+          
+      - name: Upload Release APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: chess-chat-app-release
+          path: ChessChatApp/ChessChatApp/app/build/outputs/apk/release/*.apk
+          retention-days: 30
+        continue-on-error: true
+        
+      - name: Build summary
+        run: |
+          echo "## 🎉 Build Complete!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📱 APK Files Generated:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Debug APK:" >> $GITHUB_STEP_SUMMARY
+          find ChessChatApp/ChessChatApp/app/build/outputs/apk/debug -name "*.apk" -exec ls -lh {} \; >> $GITHUB_STEP_SUMMARY || echo "No debug APK found" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Release APK:" >> $GITHUB_STEP_SUMMARY
+          find ChessChatApp/ChessChatApp/app/build/outputs/apk/release -name "*.apk" -exec ls -lh {} \; >> $GITHUB_STEP_SUMMARY || echo "No release APK found" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Download the APK files from the Artifacts section above!" >> $GITHUB_STEP_SUMMARY
