@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   push:
     paths:
-      - 'app.zip'
+      - 'Apps.zip'
 
 permissions:
   contents: write
@@ -22,14 +22,14 @@ jobs:
       - name: Unzip files
         run: |
           echo "??? Unzipping app.zip..."
-          unzip -o app.zip
+          unzip -o Apps.zip
           echo "✅ Files unzipped successfully!"
           ls -la
 
       - name: Remove ZIP file
         run: |
           echo "???️  Removing ZIP file..."
-          rm app.zip
+          rm Apps.zip
 
       - name: Configure Git
         run: |
@@ -42,6 +42,6 @@ jobs:
           if git diff --staged --quiet; then
             echo "No changes to commit"
           else
-            git commit -m "Unzip app.zip files"
+            git commit -m "Unzip Apps.zip files"
             git push
           fi
